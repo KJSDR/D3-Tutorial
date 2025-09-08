@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>D3 Groups Tutorial</title>
+</head>
+<body>
+  <svg id="svg" width="500" height="500"></svg>
+
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+  <script>
+    d3.csv('cities.csv')
+      .then(data => {
+        console.log(data)
+        
+        // Create scales
+        const minX = d3.min(data, d => parseFloat(d.x))
+        const maxX = d3.max(data, d => parseFloat(d.x))
+        const minY = d3.min(data, d => parseFloat(d.y))
+        const maxY = d3.max(data, d => parseFloat(d.y))
+
+        const xScale = d3.scaleLinear()
+          .domain([minX - 20, maxX + 20])
+          .range([50, 450])
+
+        const yScale = d3.scaleLinear()
+          .domain([minY - 20, maxY + 20])
+          .range([50, 450])
+
+        const popScale = d3.scaleSqrt()
+          .domain(d3.extent(data, d => parseInt(d.population)))
+          .range([5, 30])
+
+        const countries = Array.from(new Set(data.map(d => d.country)))
+        const countryScale = d3.scaleOrdinal()
+          .domain(countries)
+          .range(['cornflowerblue', 'gold', 'green', 'tomato', 'red'])
+
+        // Create groups
+        const node = d3.select('#svg')
+          .style('border', '1px solid')
+          .style('background-color', '#f9f9f9')
+          .selectAll('g')
+          .data(data)
+          .enter()
+
+        const groups = node.append('g')
+
+        const angle = Math.PI * 1.75
+
+        // Add circles
+        groups
+          .append('circle')
+          .attr('cx', d => xScale(parseFloat(d.x)))
+          .attr('cy', d => yScale(parseFloat(d.y)))
+          .attr('r', d => popScale(parseInt(d.population)))
+          .attr('fill', d => countryScale(d.country))
+          .attr('opacity', 0.7)
+
+        // Add paths (leader lines)
+        groups
+          .append('path')
+          .attr('d', d => {
+            const x1 = xScale(parseFloat(d.x))
+            const y1 = yScale(parseFloat(d.y))
+            const x2 = xScale(parseFloat(d.x)) + (Math.cos(angle) * (popScale(parseInt(d.population)) + 10))
+            const y2 = yScale(parseFloat(d.y)) + (Math.sin(angle) * (popScale(parseInt(d.population)) + 10))
+            const x3 = x2 + 50
+            const y3 = y2
+            return d3.line()([[x1, y1], [x2, y2], [x3, y3]])
+          })
+          .attr('stroke', '#666')
+          .attr('stroke-width', 1)
+          .attr('fill', 'none')
+
+        // Add text labels
+        groups
+          .append('text')
+          .text(d => d.label)
+          .attr('x', d => xScale(parseFloat(d.x)) + (Math.cos(angle) * (popScale(parseInt(d.population)) + 15)) + 50)
+          .attr('y', d => yScale(parseFloat(d.y)) + (Math.sin(angle) * (popScale(parseInt(d.population)) + 15)))
+          .style('font-family', 'Helvetica')
+          .style('font-size', '11px')
+          .style('fill', '#333')
+      })
+  </script>
+</body>
+</html>
