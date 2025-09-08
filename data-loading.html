@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>D3 Scales Tutorial</title>
+</head>
+<body>
+  <svg id="svg" width="500" height="500"></svg>
+
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+  <script>
+    d3.csv('cities.csv')
+      .then(data => {
+        console.log(data)
+        
+        // Get min/max values for padding
+        const minX = d3.min(data, d => parseFloat(d.x))
+        const maxX = d3.max(data, d => parseFloat(d.x))
+        const minY = d3.min(data, d => parseFloat(d.y))
+        const maxY = d3.max(data, d => parseFloat(d.y))
+
+        // Create scales
+        const xScale = d3.scaleLinear()
+          .domain([minX - 20, maxX + 20])
+          .range([50, 450])
+
+        const yScale = d3.scaleLinear()
+          .domain([minY - 20, maxY + 20])
+          .range([50, 450])
+
+        const popScale = d3.scaleSqrt()
+          .domain(d3.extent(data, d => parseInt(d.population)))
+          .range([5, 50])
+
+        // Generate unique countries dynamically
+        const countries = Array.from(new Set(data.map(d => d.country)))
+        const countryScale = d3.scaleOrdinal()
+          .domain(countries)
+          .range(['cornflowerblue', 'gold', 'green', 'tomato', 'red'])
+
+        d3.select('#svg')
+          .style('border', '1px solid')
+          .style('background-color', '#f0f8ff')
+          .selectAll('circle')
+          .data(data)
+          .enter()
+          .append('circle')
+          .attr('cx', d => xScale(parseFloat(d.x)))
+          .attr('cy', d => yScale(parseFloat(d.y)))
+          .attr('r', d => popScale(parseInt(d.population)))
+          .attr('fill', d => countryScale(d.country))
+          .attr('opacity', 0.7)
+      })
+  </script>
+</body>
+</html>
