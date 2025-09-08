@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Using Paths</title>
+  <style>
+    /* Put the box in the center of the page */
+    body, html {
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #svg {
+      border: 1px solid;
+    }
+  </style>
+</head>
+<body>
+
+<svg id="svg" width="600" height="400"></svg>
+
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<script>
+  // Filter function
+  function getDataForState(data, state) {
+    const arr = data
+      .filter(d => d.state === state)
+      .filter(d => !isNaN(d.precipitation))
+      .map(d => {
+        d.precipitation = parseFloat(d.precipitation)
+        return d
+      })
+    return arr
+  }
+
+  // Named function to handle the data
+  function handleData(data) {
+    const baData = getDataForState(data, 'BA')
+    console.log(baData)
+    
+    // X Scale
+    const xscale = d3.scaleLinear()
+      .domain([0, baData.length])
+      .range([40, 560]) // Added margins
+
+    // Y Scale  
+    const precipitationExtents = d3.extent(baData, d => d.precipitation)
+    const yscale = d3.scaleLinear()
+      .domain(precipitationExtents)
+      .range([360, 40]) // Inverted range so high values are at top
+
+    // Line generator
+    const linegen = d3.line()
+      .x((d, i) => xscale(i)) // map the x to the index
+      .y(d => yscale(d.precipitation)) // map y to precipitation
+      .curve(d3.curveLinear) // apply a curve type
+
+    // Draw the line
+    d3.select('#svg')
+      .append('path')
+      .attr('d', linegen(baData))
+      .attr('stroke-width', 3)
+      .attr('stroke', 'cornflowerblue')
+      .attr('fill', 'none')
+  }
+
+  // Load the data
+  d3.csv('precipitation.csv')
+    .then(handleData)
+</script>
+</body>
+</html>
