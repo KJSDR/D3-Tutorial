@@ -1,9 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Using Paths</title>
+  <title>Using Paths with Axes</title>
   <style>
-    /* Put the box in the center of the page */
     body, html {
       height: 100%;
       display: flex;
@@ -22,7 +21,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
 <script>
-  // Filter function
   function getDataForState(data, state) {
     const arr = data
       .filter(d => d.state === state)
@@ -34,38 +32,69 @@
     return arr
   }
 
-  // Named function to handle the data
   function handleData(data) {
-    const baData = getDataForState(data, 'BA')
-    console.log(baData)
+    const width = 600
+    const height = 400
+    const margin = 40
     
-    // X Scale
-    const xscale = d3.scaleLinear()
-      .domain([0, baData.length])
-      .range([40, 560]) // Added margins
+    const baData = getDataForState(data, 'BA')
 
-    // Y Scale  
+    // Parse the dates in the data
+    // Dates are formatted: 30/11/2017
+    const parseTime = d3.timeParse('%d/%m/%Y')
+    // parse the dates for d3
+    baData.forEach(d => d.date = parseTime(d.date))
+    console.log(baData)
+
+    // x scale using time
+    const dateExtent = d3.extent(baData, d => d.date)
+    const xscale = d3.scaleTime()
+      .domain(dateExtent)
+      .range([margin, width - margin])
+      .nice()
+
+    // y scale
     const precipitationExtents = d3.extent(baData, d => d.precipitation)
     const yscale = d3.scaleLinear()
       .domain(precipitationExtents)
-      .range([360, 40]) // Inverted range so high values are at top
+      .range([height - margin, margin])
 
-    // Line generator
+    // line generator
     const linegen = d3.line()
-      .x((d, i) => xscale(i)) // map the x to the index
-      .y(d => yscale(d.precipitation)) // map y to precipitation
-      .curve(d3.curveLinear) // apply a curve type
+      .x(d => xscale(d.date))
+      .y(d => yscale(d.precipitation))
+      .curve(d3.curveLinear)
 
-    // Draw the line
-    d3.select('#svg')
+    // Draw something on our svg
+    const svg = d3.select('#svg')
+
+    // Make a group for the graph
+    const graph = svg.append('g')
+
+    graph
       .append('path')
       .attr('d', linegen(baData))
-      .attr('stroke-width', 3)
+      .attr('stroke-width', 1)
       .attr('stroke', 'cornflowerblue')
       .attr('fill', 'none')
+
+    // Create axis generators
+    const bottomAxis = d3.axisBottom(xscale)
+    const leftAxis = d3.axisLeft(yscale)
+
+    // Append bottom axis
+    svg
+      .append('g')
+      .attr('transform', `translate(0, ${height - margin})`)
+      .call(bottomAxis)
+
+    // Append left axis
+    svg
+      .append('g')
+      .attr('transform', `translate(${margin}, 0)`)
+      .call(leftAxis)
   }
 
-  // Load the data
   d3.csv('precipitation.csv')
     .then(handleData)
 </script>
