@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>D3 Groups Tutorial</title>
+  <title>D3 Groups Tutorial - Challenges</title>
 </head>
 <body>
   <svg id="svg" width="500" height="500"></svg>
@@ -36,7 +36,7 @@
         const countries = Array.from(new Set(data.map(d => d.country)))
         const countryScale = d3.scaleOrdinal()
           .domain(countries)
-          .range(['cornflowerblue', 'gold', 'green', 'tomato', 'red'])
+          .range(['cornflowerblue', 'gold', 'green', 'tomato', 'red', 'purple', 'orange', 'pink'])
 
         // Create groups
         const node = d3.select('#svg')
@@ -75,15 +75,26 @@
           .attr('stroke-width', 1)
           .attr('fill', 'none')
 
-        // Add text labels
+        // Add text labels with country names (Challenge 2)
         groups
           .append('text')
-          .text(d => d.label)
+          .text(d => `${d.label} ${d.country}`)
           .attr('x', d => xScale(parseFloat(d.x)) + (Math.cos(angle) * (popScale(parseInt(d.population)) + 15)) + 50)
           .attr('y', d => yScale(parseFloat(d.y)) + (Math.sin(angle) * (popScale(parseInt(d.population)) + 15)))
           .style('font-family', 'Helvetica')
-          .style('font-size', '11px')
+          .style('font-size', '10px')
           .style('fill', '#333')
+
+        // Add legend (Challenge 3)
+        node
+          .append('text')
+          .text(d => `${d.label} ${d.country}`)
+          .attr('x', 10)
+          .attr('y', (d, i) => 490 - i * 20)
+          .style('font-family', 'Helvetica')
+          .style('font-size', '12px')
+          .style('fill', d => countryScale(d.country))
+          .style('font-weight', 'bold')
       })
   </script>
 </body>
